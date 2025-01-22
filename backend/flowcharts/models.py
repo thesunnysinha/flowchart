@@ -1,4 +1,3 @@
-# flowcharts/models.py
 from django.db import models
 
 class Flowchart(models.Model):
