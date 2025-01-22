@@ -19,6 +19,8 @@ const HomePage = () => {
     const [editFlowchartId, setEditFlowchartId] = useState(null);
     const [editTitle, setEditTitle] = useState('');
     const [openEditDialog, setOpenEditDialog] = useState(false);
+    const [openCreateDialog, setOpenCreateDialog] = useState(false);  // New state for create dialog
+    const [newTitle, setNewTitle] = useState('');  // State for new flowchart title
 
     useEffect(() => {
         // Fetch flowcharts from backend
@@ -27,13 +29,26 @@ const HomePage = () => {
             .catch((error) => console.error('Error fetching flowcharts:', error));
     }, [dispatch]);
 
+    const initialNodes = [
+        { id: '1', position: { x: 0, y: 0 }, data: { label: 'Node 1' } },
+        { id: '2', position: { x: 0, y: 100 }, data: { label: 'Node 2' } },
+    ];
+    const initialEdges = [{
+        id: 'e1-2', source: '1', target: '2', animated: true, style: {
+            stroke: `hsl(${Math.random() * 360}, 100%, 50%)`, // Random color for edge
+        }
+    }];
+
     const handleCreate = async () => {
         try {
+            const title = newTitle || 'New Flowchart';  // Use the input title or fallback to default
             const response = await axios.post(`${API_BASE_URL}/flowcharts/`, {
-                title: 'New Flowchart',
+                title,
+                data: { nodes: initialNodes, edges: initialEdges },
             });
             const newFlowchart = response.data;
             navigate(`/flow/${newFlowchart.id}`);
+            setOpenCreateDialog(false);  // Close dialog after creation
         } catch (error) {
             console.error('Error creating flowchart:', error);
         }
@@ -121,25 +136,21 @@ const HomePage = () => {
             </Typography>
             <Grid container spacing={3}>
                 <Grid item xs={12}>
-                    {flowcharts.length > 0 ? (
-                        <MaterialReactTable
-                            columns={columns}
-                            data={flowcharts}
-                            enablePagination
-                            enableSorting
-                            renderTopToolbarCustomActions={() => (
-                                <Button variant="contained" color="primary" onClick={handleCreate}>
-                                    Create New
-                                </Button>
-                            )}
-                        />
-                    ) : (
-                        <Typography variant="body1" color="textSecondary" align="center">
-                            No flowcharts available. Create one to get started!
-                        </Typography>
-                    )}
+                    <MaterialReactTable
+                        columns={columns}
+                        data={flowcharts}
+                        enablePagination
+                        enableSorting
+                        renderTopToolbarCustomActions={() => (
+                            <Button variant="contained" color="primary" onClick={() => setOpenCreateDialog(true)}>
+                                Create New
+                            </Button>
+                        )}
+                    />
                 </Grid>
             </Grid>
+
+            {/* Delete Confirmation Dialog */}
             <Dialog
                 open={openDeleteDialog}
                 onClose={() => setOpenDeleteDialog(false)}
@@ -159,6 +170,8 @@ const HomePage = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            {/* Edit Flowchart Title Dialog */}
             <Dialog
                 open={openEditDialog}
                 onClose={() => setOpenEditDialog(false)}
@@ -178,6 +191,33 @@ const HomePage = () => {
                     </Button>
                     <Button onClick={handleEdit} color="primary">
                         Save
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Create New Flowchart Dialog */}
+            <Dialog
+                open={openCreateDialog}
+                onClose={() => setOpenCreateDialog(false)}
+                maxWidth="sm"
+                fullWidth
+            >
+                <DialogTitle>Create New Flowchart</DialogTitle>
+                <DialogContent>
+                    <TextField
+                        value={newTitle}
+                        onChange={(e) => setNewTitle(e.target.value)}
+                        fullWidth
+                        label="Flowchart Title (Optional)"
+                        autoFocus
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenCreateDialog(false)} color="primary">
+                        Cancel
+                    </Button>
+                    <Button onClick={handleCreate} color="primary">
+                        Create
                     </Button>
                 </DialogActions>
             </Dialog>

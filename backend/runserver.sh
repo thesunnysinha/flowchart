@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-python manage.py makemigrations
+python manage.py makemigrations flowcharts
 
 python manage.py migrate
 
